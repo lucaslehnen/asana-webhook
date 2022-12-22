@@ -25,8 +25,14 @@ async def update_item(request: Request, response: Response):
     for event in events['events']:
         if event['action'] == 'added':
             if event['resource']['resource_type'] == 'task':
-                taskId = event['resource']['gid']
-                projectId = os.getenv('ASANA_REPOSITORY_PROJECT', '')
-                await asana.addAProjectToATask(taskId=taskId, projectId=projectId)
+                if event['parent']['resource_type'] == 'task':
+                    taskId = event['resource']['gid']
+
+                    projectId = os.getenv('ASANA_REPOSITORY_PROJECT', '')
+                    await asana.addAProjectToATask(taskId=taskId, projectId=projectId)
+
+                    userId = event['user']['gid']
+                    await asana.assigneeTask(taskId=taskId, userId=userId)
+
 
     return "ok"
