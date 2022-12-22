@@ -1,17 +1,32 @@
 from typing import Union
-from fastapi import FastAPI, Response, Header
+from fastapi import FastAPI, Response, Header, Request
+from app.services.asana import AsanaAPI
+import os
 
 
 app = FastAPI()
+asana = AsanaAPI(os.getenv('ASANA_TOKEN', ''))
 
 
 @app.get("/asana")
 def read_root():
-    return {"Hello": "World"}
+    return {"Asana": "Hooks"}
 
 
 @app.post("/asana")
-def update_item(response: Response, x_hook_secret: str | None = Header(default=None)):
-    response.headers["X-Hook-Secret"] = x_hook_secret
+async def update_item(request: Request, response: Response):
+    secret = request.headers.get('X-Hook-Secret', None)
+    if secret:
+        response.headers["X-Hook-Secret"] = secret
 
-    return ""
+    events = await request.json()
+    print(events)
+
+    for event in events['events']:
+        if event['action'] == 'added':
+            if event['resource']['resource_type'] == 'task':
+                taskId = event['resource']['gid']
+                projectId = os.getenv('ASANA_REPOSITORY_PROJECT', '')
+                await asana.addAProjectToATask(taskId=taskId, projectId=projectId)
+
+    return "ok"

@@ -6,3 +6,11 @@ services:
     image: tchecode/asana-hooks:latest
     labels:
       - "traefik.http.routers.asana-hook.rule=Host(`asana-hook.tchecode.com.br`)"
+    env_file:
+      - .env
+
+  update-hooks:
+    image: tchecode/asana-hooks:latest
+    command: python3 /code/app/update_hooks.py
+    env_file:
+      - .env
