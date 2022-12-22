@@ -1,5 +1,5 @@
 from typing import Union
-from fastapi import FastAPI, Response, Header
+from fastapi import FastAPI, Response, Header, Request
 
 
 app = FastAPI()
@@ -7,11 +7,15 @@ app = FastAPI()
 
 @app.get("/asana")
 def read_root():
-    return {"Hello": "World"}
+    return {"Asana": "Hooks"}
 
 
 @app.post("/asana")
-def update_item(response: Response, x_hook_secret: str | None = Header(default=None)):
-    response.headers["X-Hook-Secret"] = x_hook_secret
+async def update_item(request: Request, response: Response):
+    secret = request.headers.get('X-Hook-Secret', None)
+    if secret:
+        response.headers["X-Hook-Secret"] = secret
 
-    return ""
+    print(await request.json())
+
+    return "ok"
